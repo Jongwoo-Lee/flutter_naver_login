@@ -9,14 +9,14 @@ class FlutterNaverLogin {
 
   static Future<NaverLoginResult> logIn() async {
     final Map<dynamic, dynamic> res = await _channel.invokeMethod('logIn');
-   
+
     return _delayedToResult(
         new NaverLoginResult._(res.cast<String, dynamic>()));
   }
 
   static Future<NaverLoginResult> logOut() async {
     final Map<dynamic, dynamic> res = await _channel.invokeMethod('logOut');
-    
+
     return _delayedToResult(
         new NaverLoginResult._(res.cast<String, dynamic>()));
   }
@@ -27,8 +27,9 @@ class FlutterNaverLogin {
   static Future<NaverAccountResult> currentAccount() async {
     final Map<dynamic, dynamic> res =
         await _channel.invokeMethod('getCurrentAcount');
-    
-    return _delayedToResult(new NaverAccountResult._(res.cast<String, dynamic>()));
+
+    return _delayedToResult(
+        new NaverAccountResult._(res.cast<String, dynamic>()));
   }
 
   static Future<NaverAccessToken> get currentAccessToken async {
@@ -48,7 +49,7 @@ class FlutterNaverLogin {
   }
 }
 
-enum NaverLoginStatus { loggedIn, cancelledByUser, error }
+enum NaverLoginStatus { loggedIn, cancelledByUser, loggedOut, error }
 
 class NaverLoginResult {
   final NaverLoginStatus status;
@@ -68,6 +69,8 @@ class NaverLoginResult {
         return NaverLoginStatus.loggedIn;
       case 'cancelledByUser':
         return NaverLoginStatus.cancelledByUser;
+      case 'loggedOut':
+        return NaverLoginStatus.loggedOut;
       case 'error':
         return NaverLoginStatus.error;
     }
@@ -80,7 +83,10 @@ class NaverAccessToken {
   final String accessToken;
   final String expiresAt;
   final String tokenType;
-  bool isValid() => Clock.now().isBefore(DateTime.parse(expiresAt));
+  bool isValid() {
+    if (accessToken == null || expiresAt == "0") return false;
+    return Clock.now().isBefore(DateTime.parse(expiresAt));
+  }
 
   NaverAccessToken._(Map<String, dynamic> map)
       : accessToken = map['accessToken'],
